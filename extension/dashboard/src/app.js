@@ -218,7 +218,7 @@ document.addEventListener('click', (e) => {
   if (e.target === detailModal) { closeModal(); return; }
 
   // 모달 닫기 버튼
-  if (e.target.id === 'modalClose') { closeModal(); return; }
+  if (e.target.id === 'modalClose' || e.target.id === 'modalCloseBtn') { closeModal(); return; }
 
   // 카테고리 칩 토글
   const chip = e.target.closest('.cat-chip');
