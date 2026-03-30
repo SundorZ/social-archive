@@ -1,12 +1,33 @@
 import { CATEGORY_KEYWORDS, DEFAULT_CATEGORIES, STORAGE_KEY } from './constants.js';
 
+// ─── 키워드 매칭 (단음절 한글은 단어 경계 검사) ────────────
+function matchesKeyword(text, kw) {
+  let pos = 0;
+  while (true) {
+    const idx = text.indexOf(kw, pos);
+    if (idx === -1) return false;
+
+    // 한글 단음절 키워드: 앞뒤가 한글 음절이면 더 긴 단어의 일부 → 제외
+    if (kw.length === 1 && kw >= '\uac00' && kw <= '\ud7a3') {
+      const before = idx > 0 ? text[idx - 1] : '';
+      const after  = idx + 1 < text.length ? text[idx + 1] : '';
+      const isKoreanSyl = c => c >= '\uac00' && c <= '\ud7a3';
+      if (!isKoreanSyl(before) && !isKoreanSyl(after)) return true;
+      pos = idx + 1;
+      continue;
+    }
+
+    return true;
+  }
+}
+
 // ─── 규칙 기반 분류 ───────────────────────────────────────
 export function classifyByRules(text) {
   const lower = text.toLowerCase();
   const matched = [];
 
   for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-    if (keywords.some(kw => lower.includes(kw))) {
+    if (keywords.some(kw => matchesKeyword(lower, kw.toLowerCase()))) {
       matched.push(category);
     }
   }
@@ -75,6 +96,7 @@ export async function classifyOne(content, apiKey) {
   const text = [
     content.title,
     content.description?.slice(0, 500),
+    content.collection?.name,
     content.authorName,
     (content.hashtags || []).join(' '),
   ].filter(Boolean).join('\n');

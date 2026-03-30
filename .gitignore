@@ -6,6 +6,9 @@ node_modules/
 .env.local
 *.secret
 
+# OAuth Client ID가 포함된 manifest (GitHub엔 플레이스홀더 버전 유지)
+extension/manifest.json
+
 # 빌드 결과물
 dist/
 build/

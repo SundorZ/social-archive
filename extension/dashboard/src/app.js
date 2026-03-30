@@ -6,6 +6,12 @@ let selectedCats  = []; // 모달 카테고리 선택 상태
 
 const ALL_CATEGORIES = ['육아', '요리', '여행', 'IT', 'AI', '운동', '인테리어', '패션', '뷰티', '금융', '자기계발', '반려동물', '기타'];
 
+const PLATFORM_META = {
+  instagram: { icon: '📸', label: 'Instagram' },
+  youtube:   { icon: '▶',  label: 'YouTube'   },
+  pinterest: { icon: '📌', label: 'Pinterest'  },
+};
+
 const state = {
   platform: 'all',
   source:   'all',
@@ -61,6 +67,7 @@ function updateCounts() {
   document.getElementById('cnt-all').textContent       = allContents.length;
   document.getElementById('cnt-instagram').textContent = allContents.filter(i => i.platform === 'instagram').length;
   document.getElementById('cnt-youtube').textContent   = allContents.filter(i => i.platform === 'youtube').length;
+  document.getElementById('cnt-pinterest').textContent = allContents.filter(i => i.platform === 'pinterest').length;
   totalBadge.textContent = `${filtered.length}개`;
 }
 
@@ -106,14 +113,18 @@ function renderGrid() {
 }
 
 function renderCard(item) {
+  const meta = PLATFORM_META[item.platform] || { icon: '🔗', label: item.platform };
+  const fallbackIcon = item.platform === 'youtube' ? '▶' : (meta.icon || '🔗');
+
   const thumb = item.thumbnailUrl
     ? `<img class="card-thumb" src="${escHtml(item.thumbnailUrl)}" alt="" loading="lazy" onerror="this.style.display='none'">`
-    : `<div class="card-thumb-placeholder">${item.platform === 'youtube' ? '▶' : '📷'}</div>`;
+    : `<div class="card-thumb-placeholder">${fallbackIcon}</div>`;
 
-  const platformIcon  = item.platform === 'instagram' ? '📸' : '▶';
-  const platformLabel = item.platform === 'instagram' ? 'Instagram' : 'YouTube';
   const tags = (item.categories || []).map(c => `<span class="tag">${escHtml(c)}</span>`).join('');
   const date = item.savedAt ? formatDate(item.savedAt) : '';
+  const collectionHtml = item.collection?.name
+    ? `<div class="card-collection">📁 ${escHtml(item.collection.name)}</div>`
+    : '';
 
   return `
     <div class="card" data-id="${escHtml(item.id)}">
@@ -121,10 +132,11 @@ function renderCard(item) {
       ${thumb}
       <div class="card-body">
         <div class="card-platform">
-          <span class="platform-icon">${platformIcon}</span>
-          ${platformLabel}
+          <span class="platform-icon">${meta.icon}</span>
+          ${meta.label}
         </div>
         <div class="card-title">${escHtml(item.title || '제목 없음')}</div>
+        ${collectionHtml}
         <div class="card-tags">${tags}</div>
         <div class="card-footer">
           <span class="card-date">${date}</span>
@@ -139,17 +151,22 @@ function openModal(item) {
   currentItem = item;
 
   // 썸네일
+  const pmeta = PLATFORM_META[item.platform] || { icon: '🔗', label: item.platform };
   const thumbWrap = document.getElementById('modalThumbWrap');
   thumbWrap.innerHTML = item.thumbnailUrl
-    ? `<img src="${escHtml(item.thumbnailUrl)}" alt="" onerror="this.parentNode.innerHTML='<div class=modal-thumb-placeholder>${item.platform === 'youtube' ? '▶' : '📷'}</div>'">`
-    : `<div class="modal-thumb-placeholder">${item.platform === 'youtube' ? '▶' : '📷'}</div>`;
+    ? `<img src="${escHtml(item.thumbnailUrl)}" alt="" onerror="this.parentNode.innerHTML='<div class=modal-thumb-placeholder>${pmeta.icon}</div>'">`
+    : `<div class="modal-thumb-placeholder">${pmeta.icon}</div>`;
 
   // 메타
-  const platformLabel = item.platform === 'instagram' ? '📸 Instagram' : '▶ YouTube';
+  const meta = PLATFORM_META[item.platform] || { icon: '🔗', label: item.platform };
+  const platformLabel = `${meta.icon} ${meta.label}`;
   const sourceBadge   = item.source === 'liked'
     ? `<span class="modal-source-badge badge-liked">좋아요</span>`
     : `<span class="modal-source-badge badge-saved">저장됨</span>`;
-  document.getElementById('modalMeta').innerHTML = `${platformLabel} ${sourceBadge}`;
+  const collectionBadge = item.collection?.name
+    ? `<span class="modal-source-badge badge-collection">📁 ${escHtml(item.collection.name)}</span>`
+    : '';
+  document.getElementById('modalMeta').innerHTML = `${platformLabel} ${sourceBadge} ${collectionBadge}`;
 
   document.getElementById('modalTitle').textContent  = item.title || '제목 없음';
   document.getElementById('modalAuthor').textContent = item.authorName ? `@${item.authorName}` : '';

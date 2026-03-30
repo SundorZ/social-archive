@@ -24,13 +24,14 @@ export async function upsertContent(rawData) {
 
     const getReq = store.get(content.id);
     getReq.onsuccess = () => {
-      if (getReq.result) {
-        // 이미 존재 → 무시
-        resolve(false);
-      } else {
+      if (!getReq.result) {
+        // 신규 → 저장
         const putReq = store.put(content);
         putReq.onsuccess = () => resolve(true);
         putReq.onerror   = () => reject(putReq.error);
+      } else {
+        // 이미 존재 (활성 또는 삭제됨) → 무시
+        resolve(false);
       }
     };
     getReq.onerror = () => reject(getReq.error);

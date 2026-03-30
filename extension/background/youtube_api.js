@@ -152,7 +152,7 @@ function parseYouTubeItem(item, source = 'liked') {
     platform:         'youtube',
     contentType:      isShort ? 'short' : 'video',
     source,
-    savedAt:          new Date(s.publishedAt).getTime(),
+    savedAt:          Date.now(), // 좋아요 누른 날짜는 YouTube API가 제공하지 않으므로 수집 시각 사용
     url:              `https://www.youtube.com/watch?v=${item.id}`,
     thumbnailUrl:     s.thumbnails?.high?.url || s.thumbnails?.default?.url || '',
     title:            s.title || '',

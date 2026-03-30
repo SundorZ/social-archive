@@ -1,79 +1,26 @@
-// Extension과 동일한 DB 이름/버전 사용
-const DB_NAME    = 'social_archive_v1';
-const DB_VERSION = 1;
-const STORE_NAME = 'contents';
+// Chrome MV3에서 서비스워커와 익스텐션 페이지의 IndexedDB가 격리될 수 있으므로
+// 모든 DB 연산은 서비스워커 메시지를 통해 수행합니다
 
-let _db = null;
-
-async function openDB() {
-  if (_db) return _db;
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onsuccess = () => { _db = req.result; resolve(_db); };
-    req.onerror   = () => reject(req.error);
-    req.onupgradeneeded = () => {/* Extension이 이미 생성 */};
+function sendMsg(payload) {
+  return new Promise(resolve => {
+    chrome.runtime.sendMessage(payload, resolve);
   });
 }
 
 async function getAllContents() {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const req = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).getAll();
-    req.onsuccess = () => resolve(req.result.filter(i => !i.isArchived));
-    req.onerror   = () => reject(req.error);
-  });
+  return sendMsg({ type: 'GET_ALL_CONTENTS' });
 }
 
 async function deleteContent(id) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const getReq = store.get(id);
-    getReq.onsuccess = () => {
-      const item = getReq.result;
-      if (!item) return resolve();
-      // 소프트 삭제 — 동기화 시 재등장 방지
-      const putReq = store.put({ ...item, isArchived: true });
-      putReq.onsuccess = () => resolve();
-      putReq.onerror   = () => reject(putReq.error);
-    };
-    getReq.onerror = () => reject(getReq.error);
-  });
+  return sendMsg({ type: 'DELETE_CONTENT', id });
 }
 
 async function updateUserMemo(id, note) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const getReq = store.get(id);
-    getReq.onsuccess = () => {
-      const item = getReq.result;
-      if (!item) return resolve(false);
-      const putReq = store.put({ ...item, userNote: note });
-      putReq.onsuccess = () => resolve(true);
-      putReq.onerror   = () => reject(putReq.error);
-    };
-    getReq.onerror = () => reject(getReq.error);
-  });
+  return sendMsg({ type: 'UPDATE_MEMO', id, userNote: note });
 }
 
 async function updateCategories(id, categories) {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const getReq = store.get(id);
-    getReq.onsuccess = () => {
-      const item = getReq.result;
-      if (!item) return resolve(false);
-      const putReq = store.put({ ...item, categories, classifiedBy: 'manual' });
-      putReq.onsuccess = () => resolve(true);
-      putReq.onerror   = () => reject(putReq.error);
-    };
-    getReq.onerror = () => reject(getReq.error);
-  });
+  return sendMsg({ type: 'UPDATE_CATEGORIES', id, categories });
 }
 
 // 전역 노출 (app.js에서 사용)

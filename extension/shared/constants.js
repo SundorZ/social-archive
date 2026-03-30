@@ -2,6 +2,7 @@
 export const PLATFORM = {
   INSTAGRAM: 'instagram',
   YOUTUBE: 'youtube',
+  PINTEREST: 'pinterest',
 };
 
 // ─── 콘텐츠 타입 ──────────────────────────────────────────
@@ -10,6 +11,7 @@ export const CONTENT_TYPE = {
   REEL: 'reel',
   VIDEO: 'video',
   SHORT: 'short',
+  PIN: 'pin',
 };
 
 // ─── 수집 소스 ────────────────────────────────────────────
@@ -37,16 +39,18 @@ export const CATEGORY_KEYWORDS = {
   '육아': [
     '아기', '육아', '임신', '출산', '신생아', '어린이', '유아', '맘', '베이비',
     '맘카페', '어린이집', '유치원', '기저귀', '분유', '이유식', '유모차', '태교',
-    '임산부', '아이', '초등', '학원', '육아템', '모유', '수유', '돌잔치', '100일',
-    '첫돌', '임신일기', '육아일기', '베이비샤워',
+    '임산부', '아이들', '초등학생', '육아템', '모유수유', '돌잔치', '100일',
+    '첫돌', '임신일기', '육아일기', '베이비샤워', '어린이날',
     'baby', 'parenting', 'toddler', 'newborn', 'momlife', 'babyshower',
   ],
   '요리': [
     '레시피', '요리', '맛집', '먹방', '음식', '조리', '식당', '카페', '베이킹',
-    '밥', '국', '찌개', '반찬', '볶음', '튀김', '라면', '빵', '케이크', '디저트',
-    '간식', '한식', '일식', '중식', '양식', '비건', '채식', '홈쿡', '집밥', '배달',
-    '술안주', '음료', '커피', '차', '브런치', '오마카세', '먹스타그램', '맛스타그램',
-    '푸드스타그램', '홈베이킹', '과자', '쿠키', '파스타', '피자', '스테이크', '해산물',
+    '밥', '국물', '찌개', '된장', '탕수육', '반찬', '볶음', '튀김', '라면', '빵',
+    '케이크', '디저트', '간식', '한식', '일식', '중식', '비건', '채식', '홈쿡',
+    '집밥', '배달음식', '술안주', '음료수', '커피', '녹차', '홍차', '유자차',
+    '밀크티', '브런치', '오마카세', '먹스타그램', '맛스타그램', '푸드스타그램',
+    '홈베이킹', '과자', '쿠키', '파스타', '피자', '스테이크', '해산물', '냉면',
+    '떡볶이', '삼겹살', '치킨', '초밥', '짜장면', '김치',
     'recipe', 'cooking', 'food', 'restaurant', 'baking', 'foodie', 'cafe',
   ],
   '여행': [
@@ -91,9 +95,9 @@ export const CATEGORY_KEYWORDS = {
   '패션': [
     '패션', '코디', '스타일', '쇼핑', '데일리룩', '오오티디', '데님',
     '재킷', '코트', '후드', '티셔츠', '원피스', '스커트', '아우터', '캐주얼',
-    '스트릿', '포멀', '신발', '스니커즈', '가방', '백', '악세서리', '주얼리',
+    '스트릿', '포멀', '신발', '스니커즈', '가방', '핸드백', '크로스백', '악세서리', '주얼리',
     '시계', '선글라스', '패션스타그램', '옷스타그램', '남성패션', '여성패션',
-    '빈티지패션', '명품', '브랜드',
+    '빈티지패션', '명품', '브랜드', '하이힐', '슬랙스', '청바지',
     'fashion', 'ootd', 'style', 'outfit', 'sneakers', 'streetwear',
   ],
   '뷰티': [
@@ -152,11 +156,18 @@ export const MSG = {
   YOUTUBE_SAVED_SYNC_START: 'YOUTUBE_SAVED_SYNC_START',
   YOUTUBE_SAVED_SYNC_PROGRESS: 'YOUTUBE_SAVED_SYNC_PROGRESS',
   YOUTUBE_SAVED_SYNC_DONE: 'YOUTUBE_SAVED_SYNC_DONE',
+  YOUTUBE_LL_ITEMS: 'YOUTUBE_LL_ITEMS_INTERCEPTED',
+  PINTEREST_ITEMS: 'PINTEREST_ITEMS_INTERCEPTED',
   CLASSIFY_START: 'CLASSIFY_START',
   CLASSIFY_DONE: 'CLASSIFY_DONE',
   RECLASSIFY_ALL: 'RECLASSIFY_ALL',
   RECLASSIFY_PROGRESS: 'RECLASSIFY_PROGRESS',
   GET_STATS: 'GET_STATS',
+  // ── 대시보드 ↔ 서비스워커 DB 접근 ──
+  GET_ALL_CONTENTS: 'GET_ALL_CONTENTS',
+  DELETE_CONTENT: 'DELETE_CONTENT',
+  UPDATE_MEMO: 'UPDATE_MEMO',
+  UPDATE_CATEGORIES: 'UPDATE_CATEGORIES',
 };
 
 // ─── chrome.storage 키 ───────────────────────────────────
@@ -166,3 +177,11 @@ export const STORAGE_KEY = {
   USER_CATEGORIES: 'userCategories',
   LAST_SYNC: 'lastSync',
 };
+
+// ─── Pinterest 인터셉트 대상 경로 ──────────────────────────
+export const PINTEREST_TARGET_PATHS = [
+  '/resource/BoardFeedResource/',
+  '/resource/UserFeedResource/',
+  '/resource/PinsFeedResource/',
+  '/resource/UserActivityPinsResource/',
+];

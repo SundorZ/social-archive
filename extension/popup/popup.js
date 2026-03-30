@@ -10,13 +10,9 @@ function loadStats() {
     $('totalCount').textContent = stats.total;
     $('igCount').textContent    = `${stats.byPlatform.instagram || 0}개`;
     $('ytCount').textContent    = `${stats.byPlatform.youtube   || 0}개`;
+    $('ptCount').textContent    = `${stats.byPlatform.pinterest || 0}개`;
 
-    // 오늘 수집 수 계산
-    const todayStart = new Date().setHours(0, 0, 0, 0);
-    chrome.storage.local.get('_allContents', () => {
-      // 간략히 0 표시 (정확한 값은 대시보드에서)
-      $('todayCount').textContent = '-';
-    });
+    $('todayCount').textContent = '-';
   });
 }
 
@@ -61,12 +57,10 @@ $('ytSavedSyncBtn').addEventListener('click', () => {
 
 // 진행률 수신
 chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === MSG.YOUTUBE_SYNC_PROGRESS) {
+  if (msg.type === MSG.YOUTUBE_SYNC_PROGRESS)
     setStatus(`YouTube 좋아요 수집 중... ${msg.count}개`, 'syncing');
-  }
-  if (msg.type === MSG.YOUTUBE_SAVED_SYNC_PROGRESS) {
+  if (msg.type === MSG.YOUTUBE_SAVED_SYNC_PROGRESS)
     setStatus(`YouTube 저장 수집 중... ${msg.count}개`, 'syncing');
-  }
 });
 
 // ─── 기존 아이템 재분류 ───────────────────────────────────

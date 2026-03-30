@@ -6,12 +6,8 @@ const $ = (id) => document.getElementById(id);
 chrome.storage.local.get(
   [STORAGE_KEY.CLAUDE_API_KEY, STORAGE_KEY.YOUTUBE_CLIENT_ID],
   (result) => {
-    if (result[STORAGE_KEY.CLAUDE_API_KEY]) {
-      $('claudeApiKey').value = result[STORAGE_KEY.CLAUDE_API_KEY];
-    }
-    if (result[STORAGE_KEY.YOUTUBE_CLIENT_ID]) {
-      $('youtubeClientId').value = result[STORAGE_KEY.YOUTUBE_CLIENT_ID];
-    }
+    if (result[STORAGE_KEY.CLAUDE_API_KEY])    $('claudeApiKey').value    = result[STORAGE_KEY.CLAUDE_API_KEY];
+    if (result[STORAGE_KEY.YOUTUBE_CLIENT_ID]) $('youtubeClientId').value = result[STORAGE_KEY.YOUTUBE_CLIENT_ID];
   }
 );
 

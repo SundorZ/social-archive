@@ -12,8 +12,8 @@ export function createContent(data) {
     // ── 식별자
     id: `${data.platform}_${data.originalId}`,
     originalId: data.originalId,
-    platform: data.platform,          // 'instagram' | 'youtube'
-    contentType: data.contentType,    // 'post' | 'reel' | 'video' | 'short'
+    platform: data.platform,          // 'instagram' | 'youtube' | 'pinterest' | 'arena' | 'raindrop'
+    contentType: data.contentType,    // 'post' | 'reel' | 'video' | 'short' | 'pin' | 'block' | 'bookmark'
 
     // ── 수집 메타
     collectedAt: now,
@@ -43,6 +43,9 @@ export function createContent(data) {
     userNote: '',
     userTags: [],
     isArchived: false,
+
+    // ── 컬렉션 (Pinterest 보드 / Are.na 채널 / Raindrop 컬렉션)
+    collection: data.collection ?? null,
 
     // ── 원본 보존
     rawData: data.rawData || null,

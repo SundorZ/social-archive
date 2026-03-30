@@ -19,8 +19,9 @@
       --muted:     #64748b;
       --danger:    #f87171;
       --success:   #4ade80;
-      --ig-grad:   linear-gradient(135deg, #f09433, #e6683c, #dc2743, #bc1888);
-      --yt-color:  #ff0000;
+      --ig-grad:        linear-gradient(135deg, #f09433, #e6683c, #dc2743, #bc1888);
+      --yt-color:       #ff0000;
+      --pinterest-color: #e60023;
     }
 
     html, body { height: 100%; }
@@ -160,6 +161,7 @@
     .dot-all       { background: var(--accent); }
     .dot-instagram { background: linear-gradient(135deg, #f09433, #dc2743, #bc1888); }
     .dot-youtube   { background: var(--yt-color); }
+    .dot-pinterest { background: var(--pinterest-color); }
 
     .filter-count {
       margin-left: auto;
@@ -266,6 +268,15 @@
       color: var(--accent);
     }
 
+    .card-collection {
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 6px;
+    }
+
     .card-footer {
       display: flex;
       align-items: center;
@@ -350,8 +361,9 @@
     .modal-source-badge {
       padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600;
     }
-    .badge-liked  { background: rgba(245,158,11,0.2); color: #f59e0b; }
-    .badge-saved  { background: rgba(34,211,238,0.2); color: #22d3ee; }
+    .badge-liked      { background: rgba(245,158,11,0.2); color: #f59e0b; }
+    .badge-saved      { background: rgba(34,211,238,0.2); color: #22d3ee; }
+    .badge-collection { background: rgba(99,102,241,0.12); color: var(--accent); }
 
     .modal-title { font-size: 16px; font-weight: 700; line-height: 1.4; color: var(--text); }
 
@@ -463,6 +475,10 @@
             <span class="filter-dot dot-youtube"></span>YouTube
             <span class="filter-count" id="cnt-youtube">0</span>
           </button>
+          <button class="filter-btn" data-filter="platform" data-value="pinterest">
+            <span class="filter-dot dot-pinterest"></span>Pinterest
+            <span class="filter-count" id="cnt-pinterest">0</span>
+          </button>
         </div>
       </div>
 
@@ -539,11 +555,7 @@
   </div>
 </div>
 
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  }
-</script>
+<script src="src/sw_register.js"></script>
 <script src="src/db/indexeddb.js"></script>
 <script src="src/app.js"></script>
 

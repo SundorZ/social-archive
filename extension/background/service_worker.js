@@ -1,4 +1,4 @@
-import { upsertMany, getStats, getAllContents, updateClassification } from './storage_manager.js';
+import { upsertMany, getStats, getAllContents, updateClassification, archiveContent, updateUserData } from './storage_manager.js';
 import { MSG, STORAGE_KEY } from '../shared/constants.js';
 import { fetchAllLikedVideos, fetchAllSavedVideos } from './youtube_api.js';
 import { classifyOne } from '../shared/ai_classifier.js';
@@ -8,6 +8,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   switch (message.type) {
     case MSG.INSTAGRAM_ITEMS:
       handleInstagramItems(message.payload).then(sendResponse);
+      break;
+
+    case MSG.YOUTUBE_LL_ITEMS:
+      handleYouTubeLLItems(message.payload).then(sendResponse);
+      break;
+
+    case MSG.PINTEREST_ITEMS:
+      handlePinterestItems(message.payload).then(sendResponse);
       break;
 
     case MSG.YOUTUBE_SYNC_START:
@@ -24,6 +32,28 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
     case MSG.GET_STATS:
       getStats().then(sendResponse);
+      break;
+
+    // ── 대시보드 DB 접근 (서비스워커 통과) ──────────────
+    case MSG.GET_ALL_CONTENTS:
+      getAllContents().then(sendResponse);
+      break;
+
+    case MSG.DELETE_CONTENT:
+      archiveContent(message.id).then(sendResponse);
+      break;
+
+    case MSG.UPDATE_MEMO:
+      updateUserData(message.id, { userNote: message.userNote, userTags: [] })
+        .then(sendResponse);
+      break;
+
+    case MSG.UPDATE_CATEGORIES:
+      updateClassification(message.id, {
+        categories: message.categories,
+        classifiedBy: 'manual',
+        classificationRaw: null,
+      }).then(sendResponse);
       break;
 
     default:
@@ -58,6 +88,36 @@ async function handleInstagramItems(items) {
     return { ok: true, newCount };
   } catch (err) {
     console.error('[SocialArchive] Instagram 저장 실패:', err);
+    return { ok: false, error: err.message };
+  }
+}
+
+// ─── YouTube LL 인터셉트 처리 ─────────────────────────────
+async function handleYouTubeLLItems(items) {
+  if (!items?.length) return { ok: true, newCount: 0 };
+
+  try {
+    const newCount = await classifyAndSave(items);
+    console.log(`[SocialArchive] YouTube LL: ${newCount}개 신규 저장 (총 ${items.length}개 수신)`);
+    updateBadge();
+    return { ok: true, newCount };
+  } catch (err) {
+    console.error('[SocialArchive] YouTube LL 저장 실패:', err);
+    return { ok: false, error: err.message };
+  }
+}
+
+// ─── Pinterest 인터셉트 처리 ──────────────────────────────
+async function handlePinterestItems(items) {
+  if (!items?.length) return { ok: true, newCount: 0 };
+
+  try {
+    const newCount = await classifyAndSave(items);
+    console.log(`[SocialArchive] Pinterest: ${newCount}개 신규 저장 (총 ${items.length}개 수신)`);
+    updateBadge();
+    return { ok: true, newCount };
+  } catch (err) {
+    console.error('[SocialArchive] Pinterest 저장 실패:', err);
     return { ok: false, error: err.message };
   }
 }
