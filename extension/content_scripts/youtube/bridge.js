@@ -8,5 +8,5 @@ window.addEventListener('message', (event) => {
 
   const { type, payload } = event.data;
 
-  chrome.runtime.sendMessage({ type, payload }).catch(() => {});
+  try { chrome.runtime.sendMessage({ type, payload }).catch(() => {}); } catch (_) {}
 });
