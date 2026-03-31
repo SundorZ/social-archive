@@ -12,12 +12,15 @@ const PLATFORM_META = {
   pinterest: { icon: '📌', label: 'Pinterest'  },
 };
 
+const IMAGE_TYPES = ['post', 'pin'];
+const VIDEO_TYPES = ['reel', 'video', 'short'];
+
 const state = {
-  platform: 'all',
-  source:   'all',
-  category: 'all',
-  sort:     'savedAt',
-  search:   '',
+  platform:  'all',
+  mediaType: 'all',
+  category:  'all',
+  sort:      'savedAt',
+  search:    '',
 };
 
 // ─── DOM refs ─────────────────────────────────────────────
@@ -42,8 +45,10 @@ function applyFilters() {
   if (state.platform !== 'all') {
     items = items.filter(i => i.platform === state.platform);
   }
-  if (state.source !== 'all') {
-    items = items.filter(i => i.source === state.source);
+  if (state.mediaType === 'image') {
+    items = items.filter(i => IMAGE_TYPES.includes(i.contentType));
+  } else if (state.mediaType === 'video') {
+    items = items.filter(i => VIDEO_TYPES.includes(i.contentType));
   }
   if (state.category !== 'all') {
     items = items.filter(i => i.categories?.includes(state.category));

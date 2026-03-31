@@ -1,5 +1,5 @@
-// YouTube 좋아요 목록 (LL 플레이리스트) 인터셉터
-// youtube.com/playlist?list=LL 페이지에서만 동작
+// YouTube 플레이리스트 인터셉터
+// youtube.com/playlist?list=LL (좋아요) 또는 ?list=WL (저장) 페이지에서 동작
 // 반드시 manifest.json에 "world": "MAIN" 설정 필요
 
 (function() {
@@ -8,21 +8,28 @@
   if (window._socialArchiveYTLLLoaded) return;
   window._socialArchiveYTLLLoaded = true;
 
-  // LL 플레이리스트 페이지가 아니면 종료
-  if (!location.href.includes('list=LL')) return;
+  // LL / WL 플레이리스트 페이지가 아니면 종료
+  const listId = new URLSearchParams(location.search).get('list');
+  if (listId !== 'LL' && listId !== 'WL') return;
+
+  function getSource() {
+    const id = new URLSearchParams(location.search).get('list');
+    return id === 'LL' ? 'liked' : 'saved';
+  }
 
   function dispatch(items) {
     if (!items?.length) return;
-    console.log('[SocialArchive] YouTube 좋아요 수집:', items.length, '개');
+    const source = getSource();
+    const tagged = items.map(i => ({ ...i, source }));
+    console.log('[SocialArchive] YouTube 수집:', tagged.length, '개 (source:', source, ')');
     window.postMessage({
       __socialArchive: true,
       type: 'YOUTUBE_LL_ITEMS_INTERCEPTED',
-      payload: items,
+      payload: tagged,
     }, '*');
   }
 
   // ── 1. 초기 페이지 데이터 (ytInitialData) ────────────────
-  // document_start에서 실행되므로 ytInitialData 할당을 가로챔
   let _ytInitialData = undefined;
   try {
     Object.defineProperty(window, 'ytInitialData', {
@@ -30,7 +37,6 @@
       get() { return _ytInitialData; },
       set(v) {
         _ytInitialData = v;
-        // 약간 지연 후 파싱 (parser.js가 먼저 로드돼야 하므로)
         setTimeout(() => {
           const items = window._socialArchive?.parseLLFromInitialData(v);
           dispatch(items);
@@ -38,7 +44,6 @@
       },
     });
   } catch (_) {
-    // defineProperty 실패 시 폴링으로 대체
     let checked = false;
     const poll = setInterval(() => {
       if (window.ytInitialData && !checked) {
@@ -67,5 +72,5 @@
     return response;
   };
 
-  console.log('[SocialArchive] YouTube 좋아요 인터셉터 로드됨');
+  console.log('[SocialArchive] YouTube 인터셉터 로드됨 (list=' + listId + ')');
 })();

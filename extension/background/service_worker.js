@@ -1,6 +1,5 @@
 import { upsertMany, getStats, getAllContents, updateClassification, archiveContent, updateUserData } from './storage_manager.js';
 import { MSG, STORAGE_KEY } from '../shared/constants.js';
-import { fetchAllLikedVideos, fetchAllSavedVideos } from './youtube_api.js';
 import { classifyOne } from '../shared/ai_classifier.js';
 
 // ─── 메시지 라우터 ────────────────────────────────────────
@@ -16,14 +15,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
     case MSG.PINTEREST_ITEMS:
       handlePinterestItems(message.payload).then(sendResponse);
-      break;
-
-    case MSG.YOUTUBE_SYNC_START:
-      handleYouTubeSync().then(sendResponse);
-      break;
-
-    case MSG.YOUTUBE_SAVED_SYNC_START:
-      handleYouTubeSavedSync().then(sendResponse);
       break;
 
     case MSG.RECLASSIFY_ALL:
@@ -81,10 +72,7 @@ async function handleInstagramItems(items) {
   try {
     const newCount = await classifyAndSave(items);
     console.log(`[SocialArchive] Instagram: ${newCount}개 신규 저장 (총 ${items.length}개 수신)`);
-
-    // popup에 배지 업데이트
     updateBadge();
-
     return { ok: true, newCount };
   } catch (err) {
     console.error('[SocialArchive] Instagram 저장 실패:', err);
@@ -98,11 +86,11 @@ async function handleYouTubeLLItems(items) {
 
   try {
     const newCount = await classifyAndSave(items);
-    console.log(`[SocialArchive] YouTube LL: ${newCount}개 신규 저장 (총 ${items.length}개 수신)`);
+    console.log(`[SocialArchive] YouTube: ${newCount}개 신규 저장 (총 ${items.length}개 수신)`);
     updateBadge();
     return { ok: true, newCount };
   } catch (err) {
-    console.error('[SocialArchive] YouTube LL 저장 실패:', err);
+    console.error('[SocialArchive] YouTube 저장 실패:', err);
     return { ok: false, error: err.message };
   }
 }
@@ -118,43 +106,6 @@ async function handlePinterestItems(items) {
     return { ok: true, newCount };
   } catch (err) {
     console.error('[SocialArchive] Pinterest 저장 실패:', err);
-    return { ok: false, error: err.message };
-  }
-}
-
-// ─── YouTube 동기화 ───────────────────────────────────────
-async function handleYouTubeSync() {
-  try {
-    const items = await fetchAllLikedVideos((count) => {
-      // 진행률을 popup으로 전송
-      chrome.runtime.sendMessage({ type: MSG.YOUTUBE_SYNC_PROGRESS, count }).catch(() => {});
-    });
-
-    const newCount = await classifyAndSave(items);
-    updateBadge();
-
-    chrome.runtime.sendMessage({ type: MSG.YOUTUBE_SYNC_DONE, newCount }).catch(() => {});
-    return { ok: true, newCount };
-  } catch (err) {
-    console.error('[SocialArchive] YouTube 동기화 실패:', err);
-    return { ok: false, error: err.message };
-  }
-}
-
-// ─── YouTube Watch Later 동기화 ───────────────────────────
-async function handleYouTubeSavedSync() {
-  try {
-    const items = await fetchAllSavedVideos((count) => {
-      chrome.runtime.sendMessage({ type: MSG.YOUTUBE_SAVED_SYNC_PROGRESS, count }).catch(() => {});
-    });
-
-    const newCount = await classifyAndSave(items);
-    updateBadge();
-
-    chrome.runtime.sendMessage({ type: MSG.YOUTUBE_SAVED_SYNC_DONE, newCount }).catch(() => {});
-    return { ok: true, newCount };
-  } catch (err) {
-    console.error('[SocialArchive] YouTube 저장 동기화 실패:', err);
     return { ok: false, error: err.message };
   }
 }
@@ -199,15 +150,6 @@ async function updateBadge() {
     chrome.action.setBadgeBackgroundColor({ color: '#6366f1' });
   } catch (_) {}
 }
-
-// ─── 알람 (주기적 자동 동기화) ───────────────────────────
-chrome.alarms.create('auto_sync_youtube', { periodInMinutes: 60 * 24 });
-
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'auto_sync_youtube') {
-    handleYouTubeSync().catch(console.error);
-  }
-});
 
 // ─── 설치 시 초기화 ───────────────────────────────────────
 chrome.runtime.onInstalled.addListener(() => {

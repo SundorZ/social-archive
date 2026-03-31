@@ -10,6 +10,23 @@ async function getDB() {
 
 // ─── 추가 / 업데이트 ──────────────────────────────────────
 
+// ─── 삭제 블랙리스트 (chrome.storage.local) ──────────────
+const DELETED_IDS_KEY = 'deleted_ids';
+
+async function getDeletedIds() {
+  return new Promise(resolve => {
+    chrome.storage.local.get(DELETED_IDS_KEY, r => resolve(r[DELETED_IDS_KEY] || []));
+  });
+}
+
+async function addToDeletedIds(id) {
+  const ids = await getDeletedIds();
+  if (!ids.includes(id)) {
+    ids.push(id);
+    await new Promise(resolve => chrome.storage.local.set({ [DELETED_IDS_KEY]: ids }, resolve));
+  }
+}
+
 /**
  * 단일 콘텐츠 저장 (중복이면 무시, 새것이면 추가)
  * @returns {boolean} true = 신규 저장, false = 이미 존재
@@ -17,6 +34,10 @@ async function getDB() {
 export async function upsertContent(rawData) {
   const db = await getDB();
   const content = createContent(rawData);
+
+  // 블랙리스트 확인 (IndexedDB가 초기화돼도 삭제 기록 유지)
+  const deletedIds = await getDeletedIds();
+  if (deletedIds.includes(content.id)) return false;
 
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite');
@@ -138,11 +159,13 @@ export async function updateUserData(id, { userNote, userTags }) {
   });
 }
 
-/** 아카이브 (소프트 삭제) */
+/** 아카이브 (소프트 삭제) + 블랙리스트 등록 */
 export async function archiveContent(id) {
   const db = await getDB();
   const content = await getById(id);
   if (!content) return false;
+
+  await addToDeletedIds(id);
 
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite');

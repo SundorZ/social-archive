@@ -37,7 +37,7 @@ window._socialArchive.parseYouTubeLLItem = function(renderer) {
     originalId:   videoId,
     platform:     'youtube',
     contentType:  isShort ? 'short' : 'video',
-    source:       'liked',
+    source:       'unknown',  // 인터셉터에서 URL 기반으로 덮어씀
     url:          `https://www.youtube.com/watch?v=${videoId}`,
     thumbnailUrl,
     title,

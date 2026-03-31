@@ -23,46 +23,6 @@ function setStatus(msg, type = '') {
   el.className = `status ${type}`;
 }
 
-// ─── YouTube 좋아요 동기화 ────────────────────────────────
-$('ytSyncBtn').addEventListener('click', () => {
-  $('ytSyncBtn').disabled = true;
-  setStatus('YouTube 좋아요 동기화 중...', 'syncing');
-
-  chrome.runtime.sendMessage({ type: MSG.YOUTUBE_SYNC_START }, (result) => {
-    $('ytSyncBtn').disabled = false;
-    if (result?.ok) {
-      setStatus(`완료: ${result.newCount}개 신규 저장`, 'success');
-      loadStats();
-    } else {
-      setStatus(`오류: ${result?.error || '알 수 없는 오류'}`, 'error');
-    }
-  });
-});
-
-// ─── YouTube 저장 동기화 ──────────────────────────────────
-$('ytSavedSyncBtn').addEventListener('click', () => {
-  $('ytSavedSyncBtn').disabled = true;
-  setStatus('YouTube 저장 동기화 중...', 'syncing');
-
-  chrome.runtime.sendMessage({ type: MSG.YOUTUBE_SAVED_SYNC_START }, (result) => {
-    $('ytSavedSyncBtn').disabled = false;
-    if (result?.ok) {
-      setStatus(`완료: ${result.newCount}개 신규 저장`, 'success');
-      loadStats();
-    } else {
-      setStatus(`오류: ${result?.error || '알 수 없는 오류'}`, 'error');
-    }
-  });
-});
-
-// 진행률 수신
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === MSG.YOUTUBE_SYNC_PROGRESS)
-    setStatus(`YouTube 좋아요 수집 중... ${msg.count}개`, 'syncing');
-  if (msg.type === MSG.YOUTUBE_SAVED_SYNC_PROGRESS)
-    setStatus(`YouTube 저장 수집 중... ${msg.count}개`, 'syncing');
-});
-
 // ─── 기존 아이템 재분류 ───────────────────────────────────
 $('reclassifyBtn').addEventListener('click', () => {
   $('reclassifyBtn').disabled = true;
