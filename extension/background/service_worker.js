@@ -17,6 +17,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       handlePinterestItems(message.payload).then(sendResponse);
       break;
 
+    case MSG.COLLECT_ALL:
+      autoCollectAll().then(() => sendResponse({ ok: true }));
+      break;
+
     case MSG.RECLASSIFY_ALL:
       handleReclassifyAll().then(sendResponse);
       break;
@@ -140,6 +144,50 @@ async function handleReclassifyAll() {
     return { ok: false, error: err.message };
   }
 }
+
+// ─── 원클릭 전체 수집 ─────────────────────────────────────
+const COLLECT_SITES = [
+  { url: 'https://www.instagram.com/saved/',         label: 'Instagram',      wait: 15000 },
+  { url: 'https://www.youtube.com/playlist?list=LL', label: 'YouTube 좋아요', wait: 12000 },
+  { url: 'https://www.youtube.com/playlist?list=WL', label: 'YouTube 저장',   wait: 12000 },
+  { url: 'https://kr.pinterest.com/saved/',          label: 'Pinterest',      wait: 15000 },
+];
+
+async function autoCollectAll() {
+  for (let i = 0; i < COLLECT_SITES.length; i++) {
+    const { url, label, wait } = COLLECT_SITES[i];
+    chrome.runtime.sendMessage({
+      type: MSG.COLLECT_PROGRESS, step: i + 1, total: COLLECT_SITES.length, label,
+    }).catch(() => {});
+    const tab = await chrome.tabs.create({ url, active: false });
+    await new Promise(r => setTimeout(r, wait));
+    chrome.tabs.remove(tab.id).catch(() => {});
+  }
+  updateBadge();
+  chrome.runtime.sendMessage({ type: MSG.COLLECT_DONE }).catch(() => {});
+}
+
+// ─── 트레이 앱 폴링 알람 ──────────────────────────────────
+const TRAY_URL = 'http://localhost:27192';
+
+chrome.alarms.create('tray_poll', { periodInMinutes: 2 });
+
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name !== 'tray_poll') return;
+  try {
+    const res = await fetch(`${TRAY_URL}/poll`, { signal: AbortSignal.timeout(3000) });
+    const { command } = await res.json();
+    if (command === 'collect') {
+      await autoCollectAll();
+      const stats = await getStats();
+      fetch(`${TRAY_URL}/done`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(stats),
+      }).catch(() => {});
+    }
+  } catch (_) {} // 트레이 미실행 시 무시
+});
 
 // ─── 배지 업데이트 ────────────────────────────────────────
 async function updateBadge() {

@@ -1,0 +1,12 @@
+{
+  "name": "social-archive-tray",
+  "version": "1.0.0",
+  "description": "Social Archive 시스템 트레이 앱",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js"
+  },
+  "dependencies": {
+    "node-systray-v2": "^1.0.3"
+  }
+}

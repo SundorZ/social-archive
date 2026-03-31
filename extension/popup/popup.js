@@ -23,6 +23,23 @@ function setStatus(msg, type = '') {
   el.className = `status ${type}`;
 }
 
+// ─── 모두 수집 ────────────────────────────────────────────
+$('collectAllBtn').addEventListener('click', () => {
+  $('collectAllBtn').disabled = true;
+  setStatus('수집 준비 중...', 'syncing');
+  chrome.runtime.sendMessage({ type: MSG.COLLECT_ALL });
+});
+
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === MSG.COLLECT_PROGRESS)
+    setStatus(`${msg.label} 수집 중... (${msg.step}/${msg.total})`, 'syncing');
+  if (msg.type === MSG.COLLECT_DONE) {
+    $('collectAllBtn').disabled = false;
+    setStatus('수집 완료!', 'success');
+    loadStats();
+  }
+});
+
 // ─── 기존 아이템 재분류 ───────────────────────────────────
 $('reclassifyBtn').addEventListener('click', () => {
   $('reclassifyBtn').disabled = true;
