@@ -37,31 +37,40 @@ export function classifyByRules(text) {
 
 // ─── Claude Haiku API 분류 ────────────────────────────────
 async function classifyWithClaude(textForClassification, apiKey) {
-  const prompt = `Instagram/YouTube SNS 콘텐츠를 보고 카테고리를 분류해주세요.
+  const prompt = `당신은 SNS 콘텐츠 분류 전문가입니다.
+아래 콘텐츠를 읽고 가장 적합한 카테고리를 1~2개 선택하세요.
 
-콘텐츠:
+## 카테고리 정의
+
+- 육아: 임신·출산·신생아·어린이 양육. 이유식, 유아용품, 맘카페.
+- 요리: 음식 레시피, 맛집 소개, 먹방, 카페·음료·디저트, 베이킹.
+- 여행: 국내외 여행, 관광지 방문, 숙소·교통·나들이.
+  ✅ 포함: 벚꽃·단풍 명소, 축제·이벤트 방문, 경마장·테마파크·놀이공원·공원 나들이
+- IT: 컴퓨터·스마트폰 활용, 앱·소프트웨어 추천, 프로그래밍·개발, 기술 트렌드.
+  ✅ 포함: 맥/맥북/윈도우 사용법, 생산성 앱 추천, 개발 환경 설정
+- AI: 인공지능, ChatGPT, Claude, 생성형 AI, LLM, 자동화 도구.
+- 운동: 직접 하는 스포츠·운동. 헬스, 피트니스, 요가, 러닝, 수영, 홈트.
+  ❌ 제외: 경기 관람, 경마장·테마파크 방문 (→ 여행)
+- 인테리어: 집 꾸미기, 홈데코, 가구, 셀프인테리어, 정원.
+- 패션: 옷·코디·OOTD, 신발, 가방, 악세서리, 스타일링.
+- 뷰티: 화장품, 스킨케어, 메이크업, 헤어, 피부 관리.
+- 금융: 주식, 재테크, 코인, 부동산, 절약, 경제.
+- 자기계발: 독서, 공부, 자격증, 생산성, 커리어, 습관, 동기부여.
+- 반려동물: 강아지, 고양이, 펫, 동물 일상.
+- 기타: 위 카테고리 어디에도 명확히 해당하지 않을 때만.
+
+## 분류 예시
+- "주요 벚꽃 축제 Top 10" → ["여행"]
+- "렛츠런파크 경마 관람 후기" → ["여행"]
+- "맥 유저들이 도움 많이 되는 프로그램" → ["IT"]
+- "강남 분위기 좋은 카페" → ["요리"]
+- "헬스장 3개월 챌린지" → ["운동"]
+- "고양이 밥 거부하는 이유" → ["반려동물"]
+
+## 콘텐츠
 ${textForClassification}
 
-카테고리 기준:
-- 육아: 임신, 출산, 신생아, 어린이 양육, 이유식, 유치원
-- 요리: 레시피, 요리법, 맛집 리뷰, 베이킹, 먹방, 카페
-- 여행: 국내외 여행, 관광지, 호텔, 캠핑, 나들이, 여행 브이로그
-- IT: 프로그래밍, 개발, 앱/웹 서비스, 기술 트렌드, 스타트업
-- AI: 인공지능, ChatGPT, Claude, 생성형 AI, 자동화 툴, LLM
-- 운동: 헬스, 피트니스, 요가, 러닝, 스포츠, 홈트, 바디프로필
-- 인테리어: 집꾸미기, 홈데코, 가구, 셀프인테리어, 정원, 플랜테리어
-- 패션: 옷, 코디, OOTD, 스타일링, 신발, 가방, 악세서리
-- 뷰티: 화장품, 스킨케어, 메이크업, 헤어, 향수, 피부 관리
-- 금융: 주식, 재테크, 코인, 부동산, 절약, 펀드, 경제
-- 자기계발: 독서, 공부, 자격증, 생산성, 동기부여, 커리어, 습관
-- 반려동물: 강아지, 고양이, 펫, 동물 일상
-- 기타: 위 카테고리 어디에도 명확히 해당하지 않는 경우에만
-
-규칙:
-- 가장 관련 높은 카테고리 1~2개만 선택 (최대 2개)
-- 명확히 해당하는 카테고리가 있으면 절대 '기타' 사용 금지
-- JSON 배열만 반환, 설명 없이
-- 예시: ["패션", "뷰티"] 또는 ["IT"]`;
+JSON 배열만 반환 (설명 없이). 예: ["여행"] 또는 ["IT", "자기계발"]`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -91,7 +100,7 @@ ${textForClassification}
   };
 }
 
-// ─── 단건 분류 (규칙 → Claude 순서) ─────────────────────
+// ─── 단건 분류 (Claude 우선 → 규칙 fallback) ────────────
 export async function classifyOne(content, apiKey) {
   const text = [
     content.title,
@@ -101,23 +110,17 @@ export async function classifyOne(content, apiKey) {
     (content.hashtags || []).join(' '),
   ].filter(Boolean).join('\n');
 
-  // 1차: 규칙 기반
-  const ruleResult = classifyByRules(text);
-  if (ruleResult[0] !== '기타') {
-    return { categories: ruleResult, classifiedBy: 'rule', classificationRaw: null };
+  // 1차: Claude API (항상 우선)
+  if (apiKey) {
+    try {
+      return await classifyWithClaude(text, apiKey);
+    } catch (err) {
+      console.warn('[SocialArchive] Claude 분류 실패, 규칙 기반 사용:', err.message);
+    }
   }
 
-  // 2차: Claude API (API 키 없으면 규칙 결과 반환)
-  if (!apiKey) {
-    return { categories: ruleResult, classifiedBy: 'rule', classificationRaw: null };
-  }
-
-  try {
-    return await classifyWithClaude(text, apiKey);
-  } catch (err) {
-    console.warn('[SocialArchive] Claude 분류 실패, 규칙 기반 사용:', err.message);
-    return { categories: ruleResult, classifiedBy: 'rule', classificationRaw: null };
-  }
+  // 2차: 규칙 기반 fallback
+  return { categories: classifyByRules(text), classifiedBy: 'rule', classificationRaw: null };
 }
 
 // ─── 배치 분류 ────────────────────────────────────────────
