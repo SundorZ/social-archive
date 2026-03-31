@@ -170,7 +170,10 @@ async function autoCollectAll() {
 // ─── 트레이 앱 폴링 알람 ──────────────────────────────────
 const TRAY_URL = 'http://localhost:27192';
 
-chrome.alarms.create('tray_poll', { periodInMinutes: 2 });
+// 기존 알람 제거 후 재생성 (30초 간격)
+chrome.alarms.clear('tray_poll', () => {
+  chrome.alarms.create('tray_poll', { periodInMinutes: 0.5 });
+});
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name !== 'tray_poll') return;

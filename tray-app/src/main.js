@@ -4,7 +4,7 @@ const http   = require('http');
 const fs     = require('fs');
 const path   = require('path');
 const { exec } = require('child_process');
-const SysTray = require('node-systray-v2').default;
+const SysTray = require('systray2').default;
 
 // ─── 상태 ─────────────────────────────────────────────────
 let pendingCommand = null; // 'collect' | null

@@ -7,6 +7,6 @@
     "start": "node src/main.js"
   },
   "dependencies": {
-    "node-systray-v2": "^1.0.3"
+    "systray2": "^2.1.4"
   }
 }
