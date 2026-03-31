@@ -147,7 +147,7 @@ async function handleReclassifyAll() {
 
 // ─── 원클릭 전체 수집 ─────────────────────────────────────
 const COLLECT_SITES = [
-  { url: 'https://www.instagram.com/k10613/saved/',   label: 'Instagram',      wait: 10000 },
+  { url: 'https://www.instagram.com/k10613/saved/all-posts/', label: 'Instagram', wait: 10000 },
   { url: 'https://www.youtube.com/playlist?list=LL', label: 'YouTube 좋아요', wait: 10000 },
   { url: 'https://www.youtube.com/playlist?list=WL', label: 'YouTube 저장',   wait: 10000 },
   { url: 'https://kr.pinterest.com/psi861010/',       label: 'Pinterest',      wait: 10000 },
