@@ -147,22 +147,22 @@ async function handleReclassifyAll() {
 
 // ─── 원클릭 전체 수집 ─────────────────────────────────────
 const COLLECT_SITES = [
-  { url: 'https://www.instagram.com/k10613/saved/',   label: 'Instagram',      wait: 15000 },
-  { url: 'https://www.youtube.com/playlist?list=LL', label: 'YouTube 좋아요', wait: 12000 },
-  { url: 'https://www.youtube.com/playlist?list=WL', label: 'YouTube 저장',   wait: 12000 },
-  { url: 'https://kr.pinterest.com/psi861010/',       label: 'Pinterest',      wait: 15000 },
+  { url: 'https://www.instagram.com/k10613/saved/',   label: 'Instagram',      wait: 10000 },
+  { url: 'https://www.youtube.com/playlist?list=LL', label: 'YouTube 좋아요', wait: 10000 },
+  { url: 'https://www.youtube.com/playlist?list=WL', label: 'YouTube 저장',   wait: 10000 },
+  { url: 'https://kr.pinterest.com/psi861010/',       label: 'Pinterest',      wait: 10000 },
 ];
 
 async function autoCollectAll() {
-  for (let i = 0; i < COLLECT_SITES.length; i++) {
-    const { url, label, wait } = COLLECT_SITES[i];
-    chrome.runtime.sendMessage({
-      type: MSG.COLLECT_PROGRESS, step: i + 1, total: COLLECT_SITES.length, label,
-    }).catch(() => {});
-    const tab = await chrome.tabs.create({ url, active: false });
-    await new Promise(r => setTimeout(r, wait));
-    chrome.tabs.remove(tab.id).catch(() => {});
-  }
+  chrome.runtime.sendMessage({ type: MSG.COLLECT_PROGRESS, step: 1, total: 1, label: '전체 수집 중' }).catch(() => {});
+  // 모든 탭을 동시에 열고 병렬로 대기 후 닫기
+  await Promise.all(
+    COLLECT_SITES.map(async ({ url, wait }) => {
+      const tab = await chrome.tabs.create({ url, active: false });
+      await new Promise(r => setTimeout(r, wait));
+      chrome.tabs.remove(tab.id).catch(() => {});
+    })
+  );
   updateBadge();
   chrome.runtime.sendMessage({ type: MSG.COLLECT_DONE }).catch(() => {});
 }
